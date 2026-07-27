@@ -1,0 +1,40 @@
+name: Apartment Tracker
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"   # Every 5 minutes
+  workflow_dispatch:
+
+jobs:
+  tracker:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Python packages
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Install Playwright browser
+        run: |
+          python -m playwright install chromium
+
+      - name: Restore units.json
+        run: |
+          if [ ! -f units.json ]; then
+            echo "[]" > units.json
+          fi
+
+      - name: Run tracker
+        env:
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+          EMAIL_TO: ${{ secrets.EMAIL_TO }}
+          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+        run: |
+          python tracker.py
